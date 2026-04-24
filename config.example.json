@@ -1,0 +1,13 @@
+{
+  "_comment": "이 파일을 config.json 으로 복사한 뒤 freesound_api_key 를 본인 키로 채우세요. 자세한 발급 방법은 README.md 의 'Freesound API Key 받기' 참고.",
+
+  "freesound_api_key": "",
+  "freesound_oauth_token": "",
+
+  "save_dir": "downloads",
+  "freesound_save_dir": "downloads/freesound",
+  "youtube_save_dir": "downloads/youtube",
+
+  "youtube_links_csv": "youtube_links.csv",
+  "youtube_bin_dir": ""
+}
