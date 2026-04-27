@@ -1,5 +1,5 @@
 {
-  "_comment": "이 파일을 config.json 으로 복사한 뒤 freesound_api_key 를 본인 키로 채우세요. 자세한 발급 방법은 README.md 의 'Freesound API Key 받기' 참고.",
+  "_comment": "이 파일을 config.json 으로 복사한 뒤 freesound_api_key 에 본인 키를 채우세요. 자세한 발급 방법은 README.md 의 'Freesound API Key 받기' 참고.",
 
   "freesound_api_key": "",
   "freesound_oauth_token": "",

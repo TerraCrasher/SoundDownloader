@@ -72,7 +72,7 @@ Freesound 검색 기능을 쓰려면 무료 API Key가 필요합니다.
 3. "Create new API credential" 클릭
 4. 아무 이름이나 입력하고 발급
 5. 발급받은 **Client secret/Api key** 를 복사
-6. 앱 메뉴 **3번 → 설정** 에서 붙여넣기 후 저장
+6. 앱 메뉴 **4번 → 설정** 에서 붙여넣기 후 저장
 
 > 더 고품질의 원본 파일(WAV/AIFF)을 받고 싶다면 OAuth Token도 동일한 페이지에서 발급받아 같은 메뉴에 입력하세요. 보통은 API Key만으로 충분합니다.
 
@@ -158,7 +158,7 @@ YouTube가 사양을 자주 바꿔서 그렇습니다. 메뉴 **2번 → YouTube
 - 메뉴 **2번 → YouTube → 4번 (bin / 환경 상태 보기)** 로 진단 가능.
 
 ### "API Key가 설정되지 않았습니다"
-- 메뉴 **3번 → 설정** 에서 Freesound API Key를 입력하세요. (위 “API Key 받기” 참고)
+- 메뉴 **4번 → 설정** 에서 Freesound API Key를 입력하세요. (위 “API Key 받기” 참고)
 
 ### 글자가 깨져 보여요 (한글이 `???` 로)
 - `run.bat` 으로 실행하면 보통 정상입니다.
