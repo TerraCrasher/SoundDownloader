@@ -1,0 +1,45 @@
+# =============================================================================
+# Sound Downloader — .gitattributes
+# =============================================================================
+# 줄바꿈(line ending) 정책:
+#   - 기본: 텍스트 파일은 git이 자동 감지하고, 체크아웃할 때 OS native 로 변환.
+#   - .bat / .cmd : 반드시 CRLF. (한국어 Windows cmd.exe 가 LF 줄바꿈을 만나면
+#     %~dp0 같은 변수 확장이 깨져서 'NIOENCODING', '[오류]' 같은 토큰이 나오는 버그.)
+#   - .py / .md / .json : LF 통일 (편집기/언어 모두 무관, diff 가 깨끗해짐).
+#   - 바이너리 파일은 명시적으로 -text 로 표시해서 어떤 변환도 일어나지 않게 함.
+# =============================================================================
+
+# 1) 기본
+* text=auto
+
+# 2) Windows 전용 스크립트는 무조건 CRLF
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# 3) 코드/문서/설정은 LF 통일
+*.py        text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.txt       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.csv       text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# 4) 바이너리 (절대로 줄바꿈 변환 X)
+*.exe       binary
+*.dll       binary
+*.pyd       binary
+*.so        binary
+*.zip       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.ico       binary
+*.mp3       binary
+*.wav       binary
+*.flac      binary
+*.ogg       binary
+*.opus      binary
