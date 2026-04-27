@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.manager import DownloaderManager
 from core.downloader_base import SortOption
 from providers.youtube import FORMAT_PRESETS as YT_FORMATS, DEFAULT_FORMAT as YT_DEFAULT_FMT
+from providers.opengameart import CATEGORY_LABELS as OGA_CATEGORIES
 
 
 CONFIG_PATH = "config.json"
@@ -17,6 +18,7 @@ CONFIG_PATH = "config.json"
 DEFAULT_BASE_DIR = "downloads"
 DEFAULT_FREESOUND_SUBDIR = "freesound"
 DEFAULT_YOUTUBE_SUBDIR = "youtube"
+DEFAULT_OGA_SUBDIR = "opengameart"
 
 
 def freesound_default_dir(config_data):
@@ -34,6 +36,14 @@ def youtube_default_dir(config_data):
         return v
     base = config_data.get("save_dir") or DEFAULT_BASE_DIR
     return os.path.join(base, DEFAULT_YOUTUBE_SUBDIR)
+
+
+def oga_default_dir(config_data):
+    v = config_data.get("opengameart_save_dir")
+    if v:
+        return v
+    base = config_data.get("save_dir") or DEFAULT_BASE_DIR
+    return os.path.join(base, DEFAULT_OGA_SUBDIR)
 
 SORT_MENU = [
     ("1", "downloads",       SortOption.DOWNLOADS,       "다운로드 많은순"),
@@ -403,6 +413,139 @@ def cmd_youtube_interactive(manager, config_data):
 
 
 # ===========================================================================
+# OpenGameArt 메뉴 / CLI
+# ===========================================================================
+
+# OGA 정렬 메뉴 (DownloaderBase SortOption 일부만 사용)
+OGA_SORT_MENU = [
+    ("1", "downloads", SortOption.DOWNLOADS, "인기순 (favorites)"),
+    ("2", "newest",    SortOption.NEWEST,    "최신순"),
+    ("3", "relevance", SortOption.RELEVANCE, "관련도순"),
+]
+OGA_SORT_BY_NUM = {n: v for n, _, v, _ in OGA_SORT_MENU}
+OGA_SORT_BY_NAME = {k: v for _, k, v, _ in OGA_SORT_MENU}
+
+
+def _oga_pick_category():
+    """카테고리 선택 입력 → 'music' / 'sfx' / 'both'."""
+    keys = list(OGA_CATEGORIES.keys())  # music, sfx, both
+    print("\n  🎮 카테고리:")
+    for i, k in enumerate(keys, 1):
+        label, _ = OGA_CATEGORIES[k]
+        print(f"     {i}. {label}")
+    s = input("  ➤ 선택 [3]: ").strip() or "3"
+    if s.isdigit() and 1 <= int(s) <= len(keys):
+        return keys[int(s) - 1]
+    return "both"
+
+
+def _oga_show_results(items, top_m):
+    show_n = min(top_m, len(items))
+    print(f"\n  ✨ 총 {len(items)}개 검색됨 → 상위 {show_n}개\n")
+    print("  " + "─" * 76)
+    for i, it in enumerate(items[:show_n], 1):
+        name = it.name[:55]
+        n_files = it.extra.get("file_count", 0)
+        cat = it.extra.get("category", "?")
+        print(f"  [{i:2}] 🎮 {name}")
+        print(f"        ⭐ favs={it.downloads:>4}  📦 {n_files} 파일  🗂 {cat}  👤 {it.username}")
+        if it.license:
+            print(f"        ⚖  {it.license[:60]}")
+    print("  " + "─" * 76)
+
+
+def cmd_oga_interactive(manager, config_data):
+    provider = manager.get("OpenGameArt")
+
+    print()
+    print("  ℹ️  OpenGameArt 게시물의 라이선스는 다양합니다 (CC0/CC-BY/GPL 등).")
+    print("     상업 이용 시 각 게시물의 라이선스를 반드시 확인하세요.")
+    print("     다운로드된 폴더의 README.txt 에 출처/라이선스가 자동 기록됩니다.")
+
+    cat = _oga_pick_category()
+    provider.category_key = cat
+
+    print()
+    query = input("  🔍 검색어 (Enter=전체 브라우징): ").strip()
+
+    max_str = input("  📊 검색할 최대 개수 [50]: ").strip()
+    max_results = int(max_str) if max_str.isdigit() else 50
+
+    print("\n  📋 정렬 방식:")
+    for n, _, _, label in OGA_SORT_MENU:
+        print(f"     {n}. {label}")
+    sort_str = input("  ➤ 선택 [1]: ").strip() or "1"
+    sort_key = OGA_SORT_BY_NUM.get(sort_str, SortOption.DOWNLOADS)
+
+    top_str = input("  ⬇️  다운로드할 상위 개수 [10]: ").strip()
+    top_m = int(top_str) if top_str.isdigit() else 10
+
+    default_dir = oga_default_dir(config_data)
+    save_dir = input(f"  📁 저장 폴더 [{default_dir}]: ").strip() or default_dir
+    config_data["opengameart_save_dir"] = save_dir
+    save_config(config_data)
+
+    label_for_log = OGA_CATEGORIES[cat][0]
+    print(f"\n  🔍 OGA '{query or '(전체)'}' 검색 중... (카테고리={label_for_log}, "
+          f"정렬={sort_key}, 최대 {max_results}개)")
+
+    try:
+        items = provider.search(query, max_results=max_results, sort=sort_key)
+    except Exception as e:
+        print(f"\n  ❌ 검색 실패: {e}")
+        return
+
+    if not items:
+        print("  ⚠️  검색 결과가 없습니다 (또는 다운로드 가능한 파일이 있는 항목이 없음)")
+        return
+
+    _oga_show_results(items, top_m)
+
+    confirm = input(f"\n  ⬇️  상위 {min(top_m, len(items))}개 게시물을 다운로드할까요? [Y/n]: ").strip().lower()
+    if confirm == "n":
+        print("  ❎ 취소되었습니다")
+        return
+
+    do_download(provider, items, top_m, save_dir)
+    print("\n  ℹ️  각 게시물 폴더의 README.txt 에서 라이선스/출처를 확인하세요.")
+
+
+def cmd_oga_args(manager, config_data, args):
+    """CLI 서브커맨드 진입점: run.bat oga "ambient" --category music ..."""
+    provider = manager.get("OpenGameArt")
+    provider.category_key = args.category
+    sort_key = OGA_SORT_BY_NAME.get(args.sort, SortOption.DOWNLOADS)
+    save_dir = args.dir or oga_default_dir(config_data)
+    config_data["opengameart_save_dir"] = save_dir
+    save_config(config_data)
+
+    label_for_log = OGA_CATEGORIES[args.category][0]
+    print(f"\n  🔍 OGA '{args.query or '(전체)'}' 검색 중... "
+          f"(카테고리={label_for_log}, 정렬={args.sort}, 최대 {args.max}개)")
+
+    try:
+        items = provider.search(args.query, max_results=args.max, sort=sort_key)
+    except Exception as e:
+        print(f"\n  ❌ {e}")
+        sys.exit(1)
+
+    if not items:
+        print("  ⚠️  검색 결과가 없습니다")
+        return
+
+    _oga_show_results(items, args.top)
+
+    if not args.yes:
+        confirm = input(f"\n  ⬇️  상위 {min(args.top, len(items))}개 게시물을 다운로드할까요? [Y/n]: ").strip().lower()
+        if confirm == "n":
+            print("  ❎ 취소되었습니다")
+            return
+
+    do_download(provider, items, args.top, save_dir)
+    print("\n  ℹ️  각 게시물 폴더의 README.txt 에서 라이선스/출처를 확인하세요.")
+
+
+# ===========================================================================
 # 메인 메뉴
 # ===========================================================================
 
@@ -413,8 +556,9 @@ def interactive_mode(manager, config_data):
         print()
         print("     1. 🔍  Freesound 검색 & 다운로드")
         print("     2. 🎬  YouTube 다운로드 (yt-dlp)")
-        print("     3. ⚙️  설정 (Freesound API Key)")
-        print("     4. 📁  다운로드 폴더 열기")
+        print("     3. 🎮  OpenGameArt 검색 & 다운로드")
+        print("     4. ⚙️  설정 (Freesound API Key)")
+        print("     5. 📁  다운로드 폴더 열기")
         print("     0. 🚪  종료")
         print()
         try:
@@ -434,8 +578,13 @@ def interactive_mode(manager, config_data):
             except KeyboardInterrupt:
                 print("\n  ❎ 취소되었습니다")
         elif choice == "3":
-            cmd_settings_interactive(config_data, manager_ref)
+            try:
+                cmd_oga_interactive(manager_ref[0], config_data)
+            except KeyboardInterrupt:
+                print("\n  ❎ 취소되었습니다")
         elif choice == "4":
+            cmd_settings_interactive(config_data, manager_ref)
+        elif choice == "5":
             d = config_data.get("save_dir", "downloads")
             os.makedirs(d, exist_ok=True)
             os.startfile(os.path.abspath(d))
@@ -513,6 +662,23 @@ def main():
     p_yt.add_argument("--update", action="store_true",
                       help="실행 전 yt-dlp 업데이트")
 
+    p_oga = sub.add_parser("oga", help="OpenGameArt 검색 및 다운로드")
+    p_oga.add_argument("query", nargs="?", default="",
+                       help="검색어 (생략 가능: 전체 브라우징)")
+    p_oga.add_argument("--category", default="both",
+                       choices=list(OGA_CATEGORIES.keys()),
+                       help="카테고리: music / sfx / both (기본: both)")
+    p_oga.add_argument("--max", type=int, default=50,
+                       help="검색할 최대 게시물 수 (기본: 50)")
+    p_oga.add_argument("--top", type=int, default=10,
+                       help="다운로드할 상위 N개 (기본: 10)")
+    p_oga.add_argument("--sort", default="downloads",
+                       choices=list(OGA_SORT_BY_NAME.keys()),
+                       help="정렬: downloads(인기) / newest / relevance")
+    p_oga.add_argument("--dir", default=None, help="저장 폴더")
+    p_oga.add_argument("-y", "--yes", action="store_true",
+                       help="확인 없이 다운로드")
+
     args = parser.parse_args()
 
     if args.cmd == "search":
@@ -548,6 +714,11 @@ def main():
         except Exception as e:
             print(f"  ❌ {e}")
             sys.exit(1)
+    elif args.cmd == "oga":
+        try:
+            cmd_oga_args(manager, config_data, args)
+        except KeyboardInterrupt:
+            print("\n  ❎ 취소되었습니다")
     else:
         try:
             interactive_mode(manager, config_data)

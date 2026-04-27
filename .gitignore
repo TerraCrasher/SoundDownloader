@@ -112,3 +112,13 @@ $RECYCLE.BIN/
 *.log
 새 텍스트 문서.txt
 _test_*.csv
+
+# 12) 개발자 임시/정탐 스크래치 영역
+#  - ROOT 직속의 언더스코어로 시작하는 .py 파일 (예: _oga_probe.py)
+#    앞 슬래시(/) 덕분에 templates/.../__init__.py 등 하위 파일은 영향 없음.
+#  - 정탐/실험용 코드는 _scratch/ 폴더에 모아두면 통째로 무시됨.
+/_*.py
+/_scratch/
+
+# 13) 개발자 내부 문서 (사용자용 README.md 만 추적)
+/PROJECT.md

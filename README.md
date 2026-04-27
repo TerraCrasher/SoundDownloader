@@ -1,6 +1,6 @@
 # 🎵 Sound Downloader
 
-**Freesound** 와 **YouTube** 사운드를 한 번에 받을 수 있는 윈도우용 도구입니다.
+**Freesound**, **YouTube**, **OpenGameArt** 사운드를 한 번에 받을 수 있는 윈도우용 도구입니다.
 설치도 사용도 더블클릭 두 번이면 끝.
 
 > 대상: Windows 10 / 11
@@ -29,8 +29,9 @@
 
      1. 🔍  Freesound 검색 & 다운로드
      2. 🎬  YouTube 다운로드 (yt-dlp)
-     3. ⚙️  설정 (Freesound API Key)
-     4. 📁  다운로드 폴더 열기
+     3. 🎮  OpenGameArt 검색 & 다운로드
+     4. ⚙️  설정 (Freesound API Key)
+     5. 📁  다운로드 폴더 열기
      0. 🚪  종료
 ```
 
@@ -45,10 +46,18 @@
 - 포맷 선택: **MP3 320kbps** / **FLAC** / **WAV** / **Opus**
 - 결과 폴더: `downloads/youtube/`
 
-### 3️⃣ 설정
+### 3️⃣ OpenGameArt 검색 & 다운로드
+- **API Key 불필요** — 바로 사용 가능.
+- 카테고리: **음악(Music)** / **효과음(Sound Effect)** / **둘 다**
+- 정렬: **인기순(즐겨찾기)** / **최신순** / **관련도순**
+- 한 게시물 = 한 폴더 정책. 게시물 안의 모든 첨부 파일을 받고 `README.txt` 에 출처/작성자/태그/라이선스 안내를 자동 기록합니다.
+- 결과 폴더: `downloads/opengameart/<게시물제목>/`
+- ⚠️ OGA 게시물의 라이선스는 다양합니다(CC0/CC-BY/GPL/OGA-BY 등). 상업 이용 시 각 게시물의 출처 페이지에서 라이선스를 반드시 확인하세요.
+
+### 4️⃣ 설정
 - Freesound API Key / OAuth Token 입력.
 
-### 4️⃣ 다운로드 폴더 열기
+### 5️⃣ 다운로드 폴더 열기
 - 탐색기로 `downloads/` 폴더를 엽니다.
 
 ---
@@ -101,7 +110,8 @@ SoundDownloader/
 ├── bin/                 ← yt-dlp / ffmpeg (이미 들어있어요)
 ├── downloads/           ← 다운로드한 파일이 여기 쌓입니다
 │   ├── freesound/
-│   └── youtube/
+│   ├── youtube/
+│   └── opengameart/
 └── youtube_links.csv    ← (자동 생성) YouTube 일괄용 링크 목록
 ```
 
@@ -137,6 +147,7 @@ YouTube가 사양을 자주 바꿔서 그렇습니다. 메뉴 **2번 → YouTube
 ### Q. 다운로드한 파일은 상업적으로 써도 되나요?
 - **Freesound**: 음원마다 라이선스가 다릅니다 (CC0 / CC-BY 등). 다운로드 후 원본 페이지의 라이선스를 꼭 확인하세요.
 - **YouTube**: 저작권자가 명시적으로 허락한 경우가 아니면 개인 감상 목적으로만 사용하세요.
+- **OpenGameArt**: 게시물마다 다릅니다 (CC0/CC-BY/GPL/OGA-BY 등). 각 게시물 폴더에 자동 생성되는 `README.txt` 의 출처 URL 에서 정확한 라이선스를 확인하세요.
 
 ---
 
@@ -176,6 +187,12 @@ run.bat youtube youtube_links.csv --format flac
 
 :: yt-dlp 업데이트 후 다운로드
 run.bat youtube --update https://youtu.be/...
+
+:: OpenGameArt: "ambient" 음악 검색 → 인기순 상위 5개 자동 다운로드
+run.bat oga "ambient" --category music --top 5 -y
+
+:: OpenGameArt: 효과음 카테고리 전체 브라우징 → 최신순 상위 10개
+run.bat oga --category sfx --sort newest --top 10 -y
 ```
 
 ---

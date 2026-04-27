@@ -7,6 +7,7 @@
   "save_dir": "downloads",
   "freesound_save_dir": "downloads/freesound",
   "youtube_save_dir": "downloads/youtube",
+  "opengameart_save_dir": "downloads/opengameart",
 
   "youtube_links_csv": "youtube_links.csv",
   "youtube_bin_dir": ""

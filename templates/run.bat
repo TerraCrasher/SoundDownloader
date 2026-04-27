@@ -6,7 +6,7 @@ title Sound Downloader
 cd /d "%~dp0"
 
 if not exist "python\python.exe" (
-    echo [ì˜¤ë¥˜] python í´ë”ê°€ ì—†ìŠµë‹ˆë‹¤.
+    echo [¿À·ù] python Æú´õ°¡ ¾ø½À´Ï´Ù.
     pause
     exit /b 1
 )
