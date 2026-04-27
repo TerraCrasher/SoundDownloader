@@ -19,6 +19,7 @@ DEFAULT_BASE_DIR = "downloads"
 DEFAULT_FREESOUND_SUBDIR = "freesound"
 DEFAULT_YOUTUBE_SUBDIR = "youtube"
 DEFAULT_OGA_SUBDIR = "opengameart"
+DEFAULT_BBC_SUBDIR = "bbc"
 
 
 def freesound_default_dir(config_data):
@@ -44,6 +45,14 @@ def oga_default_dir(config_data):
         return v
     base = config_data.get("save_dir") or DEFAULT_BASE_DIR
     return os.path.join(base, DEFAULT_OGA_SUBDIR)
+
+
+def bbc_default_dir(config_data):
+    v = config_data.get("bbc_save_dir")
+    if v:
+        return v
+    base = config_data.get("save_dir") or DEFAULT_BASE_DIR
+    return os.path.join(base, DEFAULT_BBC_SUBDIR)
 
 SORT_MENU = [
     ("1", "downloads",       SortOption.DOWNLOADS,       "다운로드 많은순"),
@@ -164,7 +173,7 @@ def cmd_search_interactive(manager, config_data):
     provider = manager.get("Freesound")
 
     if not config_data.get("freesound_api_key"):
-        print("\n  ⚠️  API Key가 설정되지 않았습니다. 메뉴 '4. 설정'에서 먼저 입력하세요.")
+        print("\n  ⚠️  API Key가 설정되지 않았습니다. 메뉴 '5. 설정'에서 먼저 입력하세요.")
         return
 
     print()
@@ -546,6 +555,131 @@ def cmd_oga_args(manager, config_data, args):
 
 
 # ===========================================================================
+# BBC Sound Effects 메뉴 / CLI
+# ===========================================================================
+
+# BBC 정렬 메뉴 (provider 가 RELEVANCE / NEWEST / DURATION_SHORT / DURATION_LONG 만 지원)
+BBC_SORT_MENU = [
+    ("1", "relevance",      SortOption.RELEVANCE,      "관련도순 (기본)"),
+    ("2", "newest",         SortOption.NEWEST,         "녹음일자 최신순"),
+    ("3", "duration_short", SortOption.DURATION_SHORT, "짧은 길이순"),
+    ("4", "duration_long",  SortOption.DURATION_LONG,  "긴 길이순"),
+]
+BBC_SORT_BY_NUM  = {n: v for n, _, v, _ in BBC_SORT_MENU}
+BBC_SORT_BY_NAME = {k: v for _, k, v, _ in BBC_SORT_MENU}
+
+
+def _bbc_show_results(items, top_m):
+    show_n = min(top_m, len(items))
+    print(f"\n  ✨ 총 {len(items)}개 검색됨 → 상위 {show_n}개\n")
+    print("  " + "─" * 76)
+    for i, it in enumerate(items[:show_n], 1):
+        name = it.name[:60]
+        cat  = it.extra.get("category", "") or "-"
+        loc  = it.extra.get("location", "") or "-"
+        size_kb = (it.filesize // 1024) if it.filesize else 0
+        print(f"  [{i:2}] 📻 {name}")
+        print(f"        ⏱ {it.duration:>6.1f}s   💾 {size_kb:>5} KB   🗂 {cat}   📍 {loc[:30]}")
+        if it.username:
+            print(f"        👤 {it.username}")
+    print("  " + "─" * 76)
+    print("  ⚖  모든 트랙: BBC RemArc License (개인/교육/연구 무료, 비상업 한정)")
+
+
+def cmd_bbc_interactive(manager, config_data):
+    provider = manager.get("BBC")
+
+    print()
+    print("  ℹ️  BBC Sound Effects 는 BBC RemArc License 로 제공됩니다.")
+    print("     개인/교육/연구 목적은 무료, 상업 이용은 별도 라이선스가 필요합니다.")
+    print("     각 mp3 옆에 동일 이름의 .txt 파일로 출처/메타가 자동 기록됩니다.")
+    print("     (현재 mp3 만 지원 — 원본 wav 는 BBC 사이트에서 직접 받으세요)")
+
+    print()
+    query = input("  🔍 검색어 (영문, Enter=인기 트랙 브라우징): ").strip()
+
+    max_str = input("  📊 검색할 최대 개수 [50]: ").strip()
+    max_results = int(max_str) if max_str.isdigit() else 50
+
+    print("\n  📋 정렬 방식:")
+    for n, _, _, label in BBC_SORT_MENU:
+        print(f"     {n}. {label}")
+    sort_str = input("  ➤ 선택 [1]: ").strip() or "1"
+    sort_key = BBC_SORT_BY_NUM.get(sort_str, SortOption.RELEVANCE)
+
+    print("\n  ⏱  검색할 음원 길이:")
+    for n, label, _ in DURATION_MENU:
+        print(f"     {n}. {label}")
+    dur_str = input("  ➤ 선택 [7]: ").strip() or "7"
+    duration_max = next((sec for n, _, sec in DURATION_MENU if n == dur_str), None)
+
+    top_str = input("  ⬇️  다운로드할 상위 개수 [10]: ").strip()
+    top_m = int(top_str) if top_str.isdigit() else 10
+
+    default_dir = bbc_default_dir(config_data)
+    save_dir = input(f"  📁 저장 폴더 [{default_dir}]: ").strip() or default_dir
+    config_data["bbc_save_dir"] = save_dir
+    save_config(config_data)
+
+    print(f"\n  🔍 BBC '{query or '(전체)'}' 검색 중... (정렬={sort_key}, 최대 {max_results}개)")
+
+    try:
+        items = provider.search(query, max_results=max_results, sort=sort_key,
+                                duration_max=duration_max)
+    except Exception as e:
+        print(f"\n  ❌ 검색 실패: {e}")
+        return
+
+    if not items:
+        print("  ⚠️  검색 결과가 없습니다 (영문 키워드를 시도해보세요)")
+        return
+
+    _bbc_show_results(items, top_m)
+
+    confirm = input(f"\n  ⬇️  상위 {min(top_m, len(items))}개를 다운로드할까요? [Y/n]: ").strip().lower()
+    if confirm == "n":
+        print("  ❎ 취소되었습니다")
+        return
+
+    do_download(provider, items, top_m, save_dir)
+    print("\n  ℹ️  각 mp3 옆의 .txt 파일에서 출처/라이선스를 확인하세요.")
+
+
+def cmd_bbc_args(manager, config_data, args):
+    """CLI 진입점: run.bat bbc "rain" --top 10 -y"""
+    provider = manager.get("BBC")
+    sort_key = BBC_SORT_BY_NAME.get(args.sort, SortOption.RELEVANCE)
+    save_dir = args.dir or bbc_default_dir(config_data)
+    config_data["bbc_save_dir"] = save_dir
+    save_config(config_data)
+
+    print(f"\n  🔍 BBC '{args.query or '(전체)'}' 검색 중... "
+          f"(정렬={args.sort}, 최대 {args.max}개)")
+
+    try:
+        items = provider.search(args.query, max_results=args.max, sort=sort_key,
+                                duration_max=args.duration_max)
+    except Exception as e:
+        print(f"\n  ❌ {e}")
+        sys.exit(1)
+
+    if not items:
+        print("  ⚠️  검색 결과가 없습니다")
+        return
+
+    _bbc_show_results(items, args.top)
+
+    if not args.yes:
+        confirm = input(f"\n  ⬇️  상위 {min(args.top, len(items))}개를 다운로드할까요? [Y/n]: ").strip().lower()
+        if confirm == "n":
+            print("  ❎ 취소되었습니다")
+            return
+
+    do_download(provider, items, args.top, save_dir)
+    print("\n  ℹ️  각 mp3 옆의 .txt 파일에서 출처/라이선스를 확인하세요.")
+
+
+# ===========================================================================
 # 메인 메뉴
 # ===========================================================================
 
@@ -557,8 +691,9 @@ def interactive_mode(manager, config_data):
         print("     1. 🔍  Freesound 검색 & 다운로드")
         print("     2. 🎬  YouTube 다운로드 (yt-dlp)")
         print("     3. 🎮  OpenGameArt 검색 & 다운로드")
-        print("     4. ⚙️  설정 (Freesound API Key)")
-        print("     5. 📁  다운로드 폴더 열기")
+        print("     4. 📻  BBC Sound Effects 검색 & 다운로드")
+        print("     5. ⚙️  설정 (Freesound API Key)")
+        print("     6. 📁  다운로드 폴더 열기")
         print("     0. 🚪  종료")
         print()
         try:
@@ -583,8 +718,13 @@ def interactive_mode(manager, config_data):
             except KeyboardInterrupt:
                 print("\n  ❎ 취소되었습니다")
         elif choice == "4":
-            cmd_settings_interactive(config_data, manager_ref)
+            try:
+                cmd_bbc_interactive(manager_ref[0], config_data)
+            except KeyboardInterrupt:
+                print("\n  ❎ 취소되었습니다")
         elif choice == "5":
+            cmd_settings_interactive(config_data, manager_ref)
+        elif choice == "6":
             d = config_data.get("save_dir", "downloads")
             os.makedirs(d, exist_ok=True)
             os.startfile(os.path.abspath(d))
@@ -679,6 +819,22 @@ def main():
     p_oga.add_argument("-y", "--yes", action="store_true",
                        help="확인 없이 다운로드")
 
+    p_bbc = sub.add_parser("bbc", help="BBC Sound Effects 검색 및 다운로드 (mp3)")
+    p_bbc.add_argument("query", nargs="?", default="",
+                       help="검색어 (생략 가능: 인기 트랙 브라우징)")
+    p_bbc.add_argument("--max", type=int, default=50,
+                       help="검색할 최대 트랙 수 (기본: 50)")
+    p_bbc.add_argument("--top", type=int, default=10,
+                       help="다운로드할 상위 N개 (기본: 10)")
+    p_bbc.add_argument("--sort", default="relevance",
+                       choices=list(BBC_SORT_BY_NAME.keys()),
+                       help="정렬: relevance / newest / duration_short / duration_long")
+    p_bbc.add_argument("--duration-max", type=int, default=None,
+                       help="최대 길이(초)")
+    p_bbc.add_argument("--dir", default=None, help="저장 폴더")
+    p_bbc.add_argument("-y", "--yes", action="store_true",
+                       help="확인 없이 다운로드")
+
     args = parser.parse_args()
 
     if args.cmd == "search":
@@ -717,6 +873,11 @@ def main():
     elif args.cmd == "oga":
         try:
             cmd_oga_args(manager, config_data, args)
+        except KeyboardInterrupt:
+            print("\n  ❎ 취소되었습니다")
+    elif args.cmd == "bbc":
+        try:
+            cmd_bbc_args(manager, config_data, args)
         except KeyboardInterrupt:
             print("\n  ❎ 취소되었습니다")
     else:

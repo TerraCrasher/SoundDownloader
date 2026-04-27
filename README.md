@@ -1,6 +1,6 @@
 # 🎵 Sound Downloader
 
-**Freesound**, **YouTube**, **OpenGameArt** 사운드를 한 번에 받을 수 있는 윈도우용 도구입니다.
+**Freesound**, **YouTube**, **OpenGameArt**, **BBC Sound Effects** 사운드를 한 번에 받을 수 있는 윈도우용 도구입니다.
 설치도 사용도 더블클릭 두 번이면 끝.
 
 > 대상: Windows 10 / 11
@@ -30,8 +30,9 @@
      1. 🔍  Freesound 검색 & 다운로드
      2. 🎬  YouTube 다운로드 (yt-dlp)
      3. 🎮  OpenGameArt 검색 & 다운로드
-     4. ⚙️  설정 (Freesound API Key)
-     5. 📁  다운로드 폴더 열기
+     4. 📻  BBC Sound Effects 검색 & 다운로드
+     5. ⚙️  설정 (Freesound API Key)
+     6. 📁  다운로드 폴더 열기
      0. 🚪  종료
 ```
 
@@ -54,10 +55,20 @@
 - 결과 폴더: `downloads/opengameart/<게시물제목>/`
 - ⚠️ OGA 게시물의 라이선스는 다양합니다(CC0/CC-BY/GPL/OGA-BY 등). 상업 이용 시 각 게시물의 출처 페이지에서 라이선스를 반드시 확인하세요.
 
-### 4️⃣ 설정
+### 4️⃣ BBC Sound Effects 검색 & 다운로드
+- **API Key 불필요** — 영국 BBC 가 공개한 33,000+ 효과음/필드 레코딩 라이브러리.
+- 정렬: **관련도순** / **녹음일자 최신순** / **짧은 길이순** / **긴 길이순**
+- 길이 필터 지원 (15초/30초/45초/1분/2분/3분/제한없음).
+- 트랙별로 mp3 1개 + 동일 이름 `.txt` 메타파일(녹음일/위치/녹음자/태그/라이선스) 자동 생성.
+- 결과 폴더: `downloads/bbc/`
+- ⚠️ **BBC RemArc License**: **개인/교육/연구 목적만 무료**. 상업 이용은 별도 라이선스가 필요합니다.
+- 검색은 영문으로 (예: `rain`, `forest`, `train`).
+- 본 도구는 mp3(약 128kbps) 만 지원합니다. 원본 wav 가 필요하면 [BBC 사이트](https://sound-effects.bbcrewind.co.uk/)에서 직접 받으세요.
+
+### 5️⃣ 설정
 - Freesound API Key / OAuth Token 입력.
 
-### 5️⃣ 다운로드 폴더 열기
+### 6️⃣ 다운로드 폴더 열기
 - 탐색기로 `downloads/` 폴더를 엽니다.
 
 ---
@@ -72,7 +83,7 @@ Freesound 검색 기능을 쓰려면 무료 API Key가 필요합니다.
 3. "Create new API credential" 클릭
 4. 아무 이름이나 입력하고 발급
 5. 발급받은 **Client secret/Api key** 를 복사
-6. 앱 메뉴 **4번 → 설정** 에서 붙여넣기 후 저장
+6. 앱 메뉴 **5번 → 설정** 에서 붙여넣기 후 저장
 
 > 더 고품질의 원본 파일(WAV/AIFF)을 받고 싶다면 OAuth Token도 동일한 페이지에서 발급받아 같은 메뉴에 입력하세요. 보통은 API Key만으로 충분합니다.
 
@@ -111,7 +122,8 @@ SoundDownloader/
 ├── downloads/           ← 다운로드한 파일이 여기 쌓입니다
 │   ├── freesound/
 │   ├── youtube/
-│   └── opengameart/
+│   ├── opengameart/
+│   └── bbc/
 └── youtube_links.csv    ← (자동 생성) YouTube 일괄용 링크 목록
 ```
 
@@ -148,6 +160,7 @@ YouTube가 사양을 자주 바꿔서 그렇습니다. 메뉴 **2번 → YouTube
 - **Freesound**: 음원마다 라이선스가 다릅니다 (CC0 / CC-BY 등). 다운로드 후 원본 페이지의 라이선스를 꼭 확인하세요.
 - **YouTube**: 저작권자가 명시적으로 허락한 경우가 아니면 개인 감상 목적으로만 사용하세요.
 - **OpenGameArt**: 게시물마다 다릅니다 (CC0/CC-BY/GPL/OGA-BY 등). 각 게시물 폴더에 자동 생성되는 `README.txt` 의 출처 URL 에서 정확한 라이선스를 확인하세요.
+- **BBC Sound Effects**: BBC RemArc License — 개인/교육/연구 목적은 무료, **상업 이용은 별도 라이선스 필요**. mp3 옆 `.txt` 파일에 자동 명시됩니다. 자세한 사항은 [BBC 라이선스 페이지](https://sound-effects.bbcrewind.co.uk/licensing) 참고.
 
 ---
 
@@ -158,7 +171,7 @@ YouTube가 사양을 자주 바꿔서 그렇습니다. 메뉴 **2번 → YouTube
 - 메뉴 **2번 → YouTube → 4번 (bin / 환경 상태 보기)** 로 진단 가능.
 
 ### "API Key가 설정되지 않았습니다"
-- 메뉴 **4번 → 설정** 에서 Freesound API Key를 입력하세요. (위 “API Key 받기” 참고)
+- 메뉴 **5번 → 설정** 에서 Freesound API Key를 입력하세요. (위 “API Key 받기” 참고)
 
 ### 글자가 깨져 보여요 (한글이 `???` 로)
 - `run.bat` 으로 실행하면 보통 정상입니다.
@@ -193,6 +206,12 @@ run.bat oga "ambient" --category music --top 5 -y
 
 :: OpenGameArt: 효과음 카테고리 전체 브라우징 → 최신순 상위 10개
 run.bat oga --category sfx --sort newest --top 10 -y
+
+:: BBC Sound Effects: "rain" 검색 → 짧은 길이순 상위 10개 자동 다운로드
+run.bat bbc "rain" --sort duration_short --top 10 -y
+
+:: BBC Sound Effects: "forest" 검색 → 30초 이하 상위 5개
+run.bat bbc "forest" --duration-max 30 --top 5 -y
 ```
 
 ---

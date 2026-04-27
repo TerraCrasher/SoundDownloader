@@ -3,6 +3,7 @@ from core.downloader_base import DownloaderBase
 from providers.freesound import FreesoundDownloader
 from providers.youtube import YouTubeDownloader
 from providers.opengameart import OpenGameArtDownloader
+from providers.bbc import BbcSoundEffectsDownloader
 
 
 class DownloaderManager:
@@ -15,6 +16,7 @@ class DownloaderManager:
         self.register(FreesoundDownloader(self.config))
         self.register(YouTubeDownloader(self.config))
         self.register(OpenGameArtDownloader(self.config))
+        self.register(BbcSoundEffectsDownloader(self.config))
 
     def register(self, provider):
         self._providers[provider.NAME] = provider
