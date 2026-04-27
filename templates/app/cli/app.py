@@ -164,7 +164,7 @@ def cmd_search_interactive(manager, config_data):
     provider = manager.get("Freesound")
 
     if not config_data.get("freesound_api_key"):
-        print("\n  ⚠️  API Key가 설정되지 않았습니다. 메뉴 '2. 설정'에서 먼저 입력하세요.")
+        print("\n  ⚠️  API Key가 설정되지 않았습니다. 메뉴 '4. 설정'에서 먼저 입력하세요.")
         return
 
     print()

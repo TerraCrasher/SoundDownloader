@@ -33,7 +33,7 @@ class FreesoundDownloader(DownloaderBase):
     def search(self, query, max_results=50, sort=SortOption.DOWNLOADS,
                duration_max=None, duration_min=None):
         if not self.api_key:
-            raise RuntimeError("Freesound API Key가 설정되지 않았습니다. 메뉴 '2. 설정'에서 입력하세요.")
+            raise RuntimeError("Freesound API Key가 설정되지 않았습니다. 메뉴 '4. 설정'에서 입력하세요.")
 
         sort_value = self.SORT_MAP.get(sort, "score")
         items = []
